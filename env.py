@@ -134,6 +134,7 @@ def openGame():
     episode = 0
     score = 0
     browser = webdriver.Chrome('./chromedriver')
+
     browser.get('file:///home/ubuntu/HextrisForRL/index.html')
 
 def startGame():
