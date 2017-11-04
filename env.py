@@ -131,7 +131,7 @@ def openGame():
     global score
     score = 0
     browser = webdriver.Chrome('./chromedriver')
-    browser.get('file:///home/ubuntu/HextrisForRL/index.html')
+    browser.get('file:///home/sangho/HextrisForRL/index.html')
 
 def startGame():
     global score

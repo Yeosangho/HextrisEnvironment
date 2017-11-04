@@ -82,7 +82,7 @@ class Qnetwork():
 
         # 순환 레이어의 결과를 절반으로 나눠서 가치와 이득 흐름으로 넣어줌
         self.streamA, self.streamV = tf.split(self.rnn, 2, 1)
-        self.AW = tf.Variable(tf.random_normal([int(h_size / 2), 4]))
+        self.AW = tf.Variable(tf.random_normal([int(h_size / 2), 3]))
         self.VW = tf.Variable(tf.random_normal([int(h_size / 2), 1]))
         self.Advantage = tf.matmul(self.streamA, self.AW)
         self.Value = tf.matmul(self.streamV, self.VW)
@@ -93,13 +93,14 @@ class Qnetwork():
         # 이것으로 행동을 고른다.
         self.predict = tf.argmax(self.Qout, 1)
 
+        #Training
         # 타겟과 예측 Q value 사이의 차이의 제곱합이 손실이다.
         # 타겟Q를 받는 부분
         self.targetQ = tf.placeholder(shape=[None], dtype=tf.float32)
         # 행동을 받는 부분
         self.actions = tf.placeholder(shape=[None], dtype=tf.int32)
         # 행동을 one_hot 인코딩 하는 부분
-        self.actions_onehot = tf.one_hot(self.actions, 4, dtype=tf.float32)
+        self.actions_onehot = tf.one_hot(self.actions, 3, dtype=tf.float32)
 
         # 각 네트워크의 행동의 Q 값을 골라내는 것
         # action 번째를 뽑고 싶지만 tensor는 인덱스로 쓸 수 없어서 이렇게 하는듯(내 생각)
@@ -332,7 +333,7 @@ with tf.Session(config=config) as sess:
         rList.append(rAll)
 
         # 주기적으로 모델을 저장한다
-        if i % 20 == 0 and i != 0:
+        if i % 10 == 0 and i != 0:
             saver.save(sess, path + '/model-' + str(i) + '.cptk')
             print("Saved Model")
         if len(rList) % summaryLength == 0 and len(rList) != 0:
