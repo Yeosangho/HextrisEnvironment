@@ -17,8 +17,8 @@ color['orange'] = [241,196,15]
 color['blue'] = [52,152,219]
 color['green'] = [46,204,113]
 color['black'] = [0, 0, 0]
-
-gridWidth = 64
+gridWidth
+ = 64
 gridHeight = 64
 
 def checkColor(r, g, b):
@@ -97,8 +97,8 @@ def test():
     global resized
     global score
     score = 0
-    browser = webdriver.Chrome('/home/sangho/chromedriver')
-    browser.get('file:///home/sangho/hextris/index.html')
+    browser = webdriver.Chrome('./chromedriver')
+    browser.get('file:///home/ubuntu/HextrisForRL/index.html')
     while(True):
         #step(1)
         img = browser.execute_script('return getImageData()')
@@ -126,8 +126,8 @@ def openGame():
     global browser
     global score
     score = 0
-    browser = webdriver.Chrome('/home/sangho/chromedriver')
-    browser.get('file:///home/sangho/hextris/index.html')
+    browser = webdriver.Chrome('./chromedriver')
+    browser.get('file:///home/ubuntu/HextrisForRL/index.html')
 
 def startGame():
     global score
