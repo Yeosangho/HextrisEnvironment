@@ -198,6 +198,6 @@ def step(action):
         gameStep = 0;
     score = newScore
     oldIsCombo = isCombo
-    print('gameStep' + str(gameStep) + 'isCombo' + str(isCombo) + 'reward'+ str(reward));
+    #print('gameStep' + str(gameStep) + 'isCombo' + str(isCombo) + 'reward'+ str(reward));
     return gameCapture, reward, done
 #def startGame():
