@@ -23,7 +23,7 @@ while(True):
     count = count + 1
     action = int(random.random() * 3)
     #env.render()
-    state, reward, done = env.step(action)
+    state, reward, done = env.step(0)
 
     if done:
         print("game over!!")

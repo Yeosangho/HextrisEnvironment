@@ -17,8 +17,7 @@ from threading import Timer
 from helper import *
 
 env.openGame()
-env.startGame()
-env.step(0)
+
 
 
 class Qnetwork():

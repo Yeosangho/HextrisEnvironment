@@ -7,7 +7,6 @@ import cv2
 import numpy as np
 import PIL as Image
 
-
 score = 0
 color = {}
 color['white'] = [255, 255, 255]
@@ -91,6 +90,10 @@ def getImage():
     state = makeGrid(resized)
     return state
 
+def getComboTime() :
+    isCombo = browser.execute_script('return getIsCombo()')
+    return isCombo
+
 def test():
     global browser
     global resized
@@ -132,7 +135,15 @@ def openGame():
 
 def startGame():
     global score
+    global gameStep
+    global combotime
+    global nothingtime
+    global oldIsCombo
+    nothingtime = 0
+    oldIsCombo = 0
+    gameStep = 0
     score = 0
+    combotime = 0
     browser.find_element_by_tag_name('body').send_keys(Keys.ENTER)
     return getImage()
 
@@ -142,8 +153,25 @@ def render():
     cv2.imshow('f', resized)
     cv2.waitKey(1)
 
+
 def step(action):
     global score
+    global gameStep
+    global combotime
+    global nothingtime
+    global oldIsCombo
+    newScore = getScore()
+    gettingScore = float(newScore) - float(score)
+    isCombo = getComboTime();
+    if (gettingScore == 0):
+        nothingtime = nothingtime + 0.0002
+    if (gettingScore > 0):
+        nothingtime = 0
+    if (isCombo ==1):
+        combotime = combotime + 0.02
+    if (isCombo ==0):
+        combotime = 0
+
     if(action == 1):
         browser.find_element_by_tag_name('body').send_keys(Keys.ARROW_LEFT)
     elif(action == 2):
@@ -152,15 +180,24 @@ def step(action):
     gameState = getGameState()
     reward = 0
     done = 0
-    newScore = getScore()
+
+    gettingreward = gettingScore/500
+    gameScore = float(newScore)/20000
     if(gameState == 1):
-        if (newScore > score):
-            reward = 1
-        else :
-            reward = 0
+        if (isCombo == 1):
+            reward = gameStep + gameScore + gettingreward + combotime - nothingtime
+        if (isCombo == 0):
+            if(oldIsCombo == 1):
+                reward =  -0.02 - nothingtime
+            else:
+                reward = - nothingtime
+        gameStep = gameStep + 0.00001;
     elif(gameState == 2):
         reward = -1
         done = 1
+        gameStep = 0;
     score = newScore
+    oldIsCombo = isCombo
+    print('gameStep' + str(gameStep) + 'isCombo' + str(isCombo) + 'reward'+ str(reward));
     return gameCapture, reward, done
 #def startGame():
