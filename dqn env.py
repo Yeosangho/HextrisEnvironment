@@ -17,8 +17,6 @@ from threading import Timer
 from helper import *
 
 env.openGame()
-env.startGame()
-env.step(0)
 
 
 class Qnetwork():
@@ -333,7 +331,7 @@ with tf.Session(config=config) as sess:
         rList.append(rAll)
 
         # 주기적으로 모델을 저장한다
-        if i % 1000 == 0 and i != 0:
+        if i % 20 == 0 and i != 0:
             saver.save(sess, path + '/model-' + str(i) + '.cptk')
             print("Saved Model")
         if len(rList) % summaryLength == 0 and len(rList) != 0:
