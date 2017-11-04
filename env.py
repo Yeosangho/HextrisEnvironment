@@ -5,6 +5,7 @@ import matplotlib.image as mpimg
 import cv2
 
 import numpy as np
+import csv
 import PIL as Image
 
 score = 0
@@ -129,9 +130,11 @@ def test():
 def openGame():
     global browser
     global score
+    global episode
+    episode = 0
     score = 0
     browser = webdriver.Chrome('./chromedriver')
-    browser.get('file:///home/sangho/HextrisForRL/index.html')
+    browser.get('file:///home/ubuntu/HextrisForRL/index.html')
 
 def startGame():
     global score
@@ -139,11 +142,13 @@ def startGame():
     global combotime
     global nothingtime
     global oldIsCombo
+    global episode
     nothingtime = 0
     oldIsCombo = 0
     gameStep = 0
     score = 0
     combotime = 0
+    episode = episode+1
     browser.find_element_by_tag_name('body').send_keys(Keys.ENTER)
     return getImage()
 
@@ -160,6 +165,7 @@ def step(action):
     global combotime
     global nothingtime
     global oldIsCombo
+    global episode
     newScore = getScore()
     gettingScore = float(newScore) - float(score)
     isCombo = getComboTime();
@@ -191,11 +197,16 @@ def step(action):
                 reward =  -0.02 - nothingtime
             else:
                 reward = - nothingtime
-        gameStep = gameStep + 0.00001;
+        gameStep = gameStep + 0.00001
+
     elif(gameState == 2):
         reward = -1
         done = 1
-        gameStep = 0;
+        gameStep = 0
+        with open('./log/score_log.csv', 'a', newline='') as csvfile:
+            scoreWriter = csv.writer(csvfile, delimiter=',',
+                                    quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            scoreWriter.writerow([int(episode)] + [str(score)])
     score = newScore
     oldIsCombo = isCombo
     #print('gameStep' + str(gameStep) + 'isCombo' + str(isCombo) + 'reward'+ str(reward));
