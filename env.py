@@ -97,7 +97,7 @@ def test():
     global resized
     global score
     score = 0
-    browser = webdriver.Chrome('/home/sangho/chromedriver')
+    browser = webdriver.Chrome('chromedriver')
     browser.get('file:///home/sangho/hextris/index.html')
     while(True):
         #step(1)
@@ -126,13 +126,16 @@ def openGame():
     global browser
     global score
     score = 0
-    browser = webdriver.Chrome('/home/sangho/chromedriver')
-    browser.get('file:///home/sangho/hextris/index.html')
+    browser = webdriver.Chrome('./chromedriver')
+    browser.get('file:///home/ubuntu/HextrisForRL/index.html')
 
 def startGame():
     global score
     score = 0
     browser.find_element_by_tag_name('body').send_keys(Keys.ENTER)
+    return getImage()
+
+
 
 def render():
     cv2.imshow('f', resized)
