@@ -168,7 +168,7 @@ def step(action):
     if (gettingScore > 0):
         nothingtime = 0
     if (isCombo ==1):
-        combotime = combotime + 0.02
+        combotime = combotime + 0.00002
     if (isCombo ==0):
         combotime = 0
 
@@ -181,7 +181,7 @@ def step(action):
     reward = 0
     done = 0
 
-    gettingreward = gettingScore/500
+    gettingreward = gettingScore/100
     gameScore = float(newScore)/20000
     if(gameState == 1):
         if (isCombo == 1):
@@ -193,7 +193,7 @@ def step(action):
                 reward = - nothingtime
         gameStep = gameStep + 0.00001;
     elif(gameState == 2):
-        reward = -1
+        reward = -3
         done = 1
         gameStep = 0;
     score = newScore
