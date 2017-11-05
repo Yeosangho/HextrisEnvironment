@@ -6,7 +6,7 @@ import cv2
 
 import numpy as np
 import PIL as Image
-
+import csv
 
 score = 0
 color = {}
@@ -125,12 +125,16 @@ def test():
 def openGame():
     global browser
     global score
+    global episode
     score = 0
+    episode = 0
     browser = webdriver.Chrome('./chromedriver')
-    browser.get('file:///home/ubuntu/HextrisForRL/index.html')
+    browser.get('file:///home/sangho/HextrisForRL/index.html')
 
 def startGame():
     global score
+    global episode
+    episode = episode +1
     score = 0
     browser.find_element_by_tag_name('body').send_keys(Keys.ENTER)
     return getImage()
@@ -143,6 +147,7 @@ def render():
 
 def step(action):
     global score
+    global episode
     if(action == 1):
         browser.find_element_by_tag_name('body').send_keys(Keys.ARROW_LEFT)
     elif(action == 2):
@@ -160,6 +165,10 @@ def step(action):
     elif(gameState == 2):
         reward = -1
         done = 1
+        with open('./log/score_log.csv', 'a', newline='') as csvfile:
+            scoreWriter = csv.writer(csvfile, delimiter=',',
+                                    quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            scoreWriter.writerow([int(episode)] + [str(score)])
     score = newScore
     return gameCapture, reward, done
 #def startGame():
