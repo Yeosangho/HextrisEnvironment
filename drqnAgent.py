@@ -126,7 +126,7 @@ class Qnetwork():
 
 
 class experience_buffer():
-    def __init__(self, buffer_size=100):
+    def __init__(self, buffer_size=75):
         self.buffer = []
         self.buffer_size = buffer_size
 
@@ -155,7 +155,7 @@ startE = 1 # 무작위 행위의 시작 확률
 endE = 0.01 # 무작위 행위의 최종 확률
 anneling_steps = 1000000 # startE부터 endE까지 몇단계에 걸쳐서 줄일 것인가.
 num_episodes = 4000 # 몇개의 에피소드를 할 것인가.
-pre_train_episode = 15 # 학습 시작 전에 몇번의 무작위 episode를 할 것인가.
+pre_train_episode = 4 # 학습 시작 전에 몇번의 무작위 episode를 할 것인가.
 load_model = True # 저장된 모델을 불러올 것인가?
 path = "./drqn" # 모델을 저장할 위치
 h_size = 512 # 이득 함수와 가치 함수로 나뉘기 전에 최종 콘볼루션의 크기
@@ -232,7 +232,7 @@ with tf.Session(config=config) as sess:
 
     # 변수를 초기화한다.
     sess.run(init)
-    e = startE - count*stepDrop * 500
+    e = startE - count*stepDrop * 700
     if(e <= endE):
         e = endE
     # 주요 신경망과 동일하게 타겟 신경망을 설정한다
@@ -339,7 +339,7 @@ with tf.Session(config=config) as sess:
             end_time = time.time()
             if(end_time - start_time < process_time_limit):
                 sleep_time = process_time_limit - (end_time - start_time)
-                time.sleep(sleep_time)
+                #time.sleep(sleep_time)
             # processing end
             end_time = time.time()
             if(total_steps % 100 == 0):
