@@ -32,34 +32,34 @@ class Qnetwork():
         # 첫번째 콘볼루션은 8x8 커널을 4 스트라이드로 32개의 activation map을 만든다
         # 출력 크기는 (image 크기 - 필터 크기) / 스트라이드 + 1 이다.
         # zero padding이 없는 VALID 옵션이기 때문에
-        # (64-8)/4 + 1
-        # 15x15x32 의 activation volumn이 나온다
+        # (64-7)/3 + 1
+        # 20x20x32 의 activation volumn이 나온다
         self.conv1 = slim.convolution2d( \
             inputs=self.imageIn, num_outputs=32, \
-            kernel_size=[8, 8], stride=[4, 4], padding='VALID', \
+            kernel_size=[7, 7], stride=[3, 3], padding='VALID', \
             biases_initializer=None, scope=myScope + '_conv1')
 
         # 두번째 콘볼루션은 5x5 커널을 2 스트라이드로 64개의 activation map을 만든다.
-        # (15-5)/2 +1 = 8
-        # 출력 크기는 6x6x64
+        # (20-4)/2 +1 = 9
+        # 출력 크기는 9x9x64
         self.conv2 = slim.convolution2d( \
             inputs=self.conv1, num_outputs=64, \
-            kernel_size=[5, 5], stride=[2, 2], padding='VALID', \
+            kernel_size=[4, 4], stride=[2, 2], padding='VALID', \
             biases_initializer=None, scope=myScope + '_conv2')
 
         # 세번째 콘볼루션은 3x3 커널을 1 스트라이드로 64개의 activation map을 만든다.
-        # (6-3)/1 + 1 = 6
-        # 출력 크기는 6x6x64
+        # (9-3)/1 + 1 = 7
+        # 출력 크기는 7x7x64
         self.conv3 = slim.convolution2d( \
             inputs=self.conv2, num_outputs=64, \
             kernel_size=[3, 3], stride=[1, 1], padding='VALID', \
             biases_initializer=None, scope=myScope + '_conv3')
 
-        # 네번째 콘볼루션은 4x4 커널을 1 스트라이드 512개의 activation map을 만든다.
-        # 출력 크기는 4x4x512
+        # 네번째 콘볼루션은 7x7 커널을 1 스트라이드 512개의 activation map을 만든다.
+        # 출력 크기는 7x7x512
         self.conv4 = slim.convolution2d( \
             inputs=self.conv3, num_outputs=512, \
-            kernel_size=[4, 4], stride=[1, 1], padding='VALID', \
+            kernel_size=[7, 7], stride=[1, 1], padding='VALID', \
             biases_initializer=None, scope=myScope + '_conv4')
 
         # 몇개의 걸음 기록을 사용할지 받아들이는 부분
@@ -155,14 +155,14 @@ startE = 1 # 무작위 행위의 시작 확률
 endE = 0.01 # 무작위 행위의 최종 확률
 anneling_steps = 1000000 # startE부터 endE까지 몇단계에 걸쳐서 줄일 것인가.
 num_episodes = 4000 # 몇개의 에피소드를 할 것인가.
-pre_train_episode = 20 # 학습 시작 전에 몇번의 무작위 episode를 할 것인가.
+pre_train_episode = 15 # 학습 시작 전에 몇번의 무작위 episode를 할 것인가.
 load_model = True # 저장된 모델을 불러올 것인가?
 path = "./drqn" # 모델을 저장할 위치
 h_size = 512 # 이득 함수와 가치 함수로 나뉘기 전에 최종 콘볼루션의 크기
 time_per_step = 1 # git 생성에 사용될 각 걸음의 크기
 summaryLength = 10 # 분석을 위해 주기적으로 저장하기 위한 에피소드의 수
 tau = 0.001
-process_time_limit = 0.37
+process_time_limit = 0.33
 
 # 그래프를 초기화한다
 tf.reset_default_graph()
@@ -337,9 +337,9 @@ with tf.Session(config=config) as sess:
 
             # processing end
             end_time = time.time()
-            if(end_time - start_time < process_time_limit & i >= pre_train_episode):
+            if(end_time - start_time < process_time_limit and i >= pre_train_episode):
                 sleep_time = process_time_limit - (end_time - start_time)
-                time.sleep(process_time_limit)
+                time.sleep(sleep_time)
             # processing end
             end_time = time.time()
             if(total_steps % 100 == 0):
@@ -372,4 +372,3 @@ with tf.Session(config=config) as sess:
                            summaryLength,h_size,sess,mainQN,time_per_step)
         count = count + 1
     saver.save(sess, path + '/model-' + str(i) + '.cptk')
-

@@ -11,7 +11,7 @@ import csv
 score = 0
 color = {}
 color['white'] = [255, 255, 255]
-color['grey'] = [220, 223, 225]
+color['grey'] = [153, 153, 153]
 color['red'] = [231,76,60]
 color['orange'] = [241,196,15]
 color['blue'] = [52,152,219]
