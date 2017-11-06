@@ -7,11 +7,13 @@ import cv2
 import numpy as np
 import csv
 import PIL as Image
+import tensorflow as tf
+import math
 
 score = 0
 color = {}
 color['white'] = [255, 255, 255]
-color['grey'] = [220, 223, 225]
+color['grey'] = [153, 153, 153]
 color['red'] = [231,76,60]
 color['orange'] = [241,196,15]
 color['blue'] = [52,152,219]
@@ -19,6 +21,15 @@ color['green'] = [46,204,113]
 color['black'] = [0, 0, 0]
 gridWidth = 64
 gridHeight = 64
+
+def distance(c1, c2):
+    (r1,g1,b1) = c1
+    (r2,g2,b2) = c2
+    return ((r1 - r2)**2 + (g1 - g2) ** 2 + (b1 - b2) **2)
+
+
+
+
 
 def checkColor(r, g, b):
     intR = int(r * 255)
@@ -32,22 +43,24 @@ def checkColor(r, g, b):
     #blue : 52,152,219 -> 3
     #green : 46,204,113 -> 4
     #black : 0 0 0  -> 5
-    if(intRGB == color['white']):
+    colors = list(color.values())
+    closest_colors = min(colors, key=lambda color: distance(color, intRGB))
+    closestColor = closest_colors
+    if(closestColor == color['white']):
         return 6
-    elif(intRGB == color['grey']):
+    elif(closestColor == color['grey']):
         return 0
-    elif(intRGB == color['red']):
+    elif(closestColor == color['red']):
         return 1
-    elif(intRGB == color['orange']):
+    elif(closestColor == color['orange']):
         return 2
-    elif(intRGB == color['blue']):
+    elif(closestColor == color['blue']):
         return 3
-    elif(intRGB == color['green']):
+    elif(closestColor == color['green']):
         return 4
-    elif(intRGB == color['black']):
+    elif(closestColor == color['black']):
         return 5
-    else:
-        return 0
+
 
 def printGrid(grid):
     for row in range(gridHeight):
@@ -69,7 +82,7 @@ def getState():
     resized = cv2.resize(plotImg, (gridWidth, gridHeight))
     state = makeGrid(resized)
     printGrid(state)
-    return state
+    return resized
 def getScore():
     # game over일때  스코어 유지됨
     return browser.execute_script('return getScore()')
@@ -87,7 +100,7 @@ def getImage():
     plotImg = mpimg.imread(img)
     #print(type(plotImg))
     plotImg = plotImg.astype(np.float32)
-    resized = cv2.resize(plotImg, (gridWidth, gridHeight))
+    resized = cv2.resize(plotImg, (gridWidth, gridHeight), interpolation=cv2.INTER_LINEAR)
     state = makeGrid(resized)
     return state
 
@@ -115,7 +128,7 @@ def test():
         shape = plotImg.shape
         #print(type(plotImg))
         plotImg = plotImg.astype(np.float32)
-        resized = cv2.resize(plotImg, (gridWidth, gridHeight))
+        resized = cv2.resize(plotImg, (gridWidth, gridHeight), interpolation = cv2.INTER_AREA )
         #reversed = cv2.split(resized)
         #result = cv2.merge([reversed[2], reversed[1], reversed[0]])
         gameState = getGameState()
@@ -123,7 +136,7 @@ def test():
         print(gameState)
         print(score)
         state = makeGrid(resized)
-        #printGrid(state)
+        printGrid(state)
         cv2.imshow('f', resized)
         cv2.waitKey(1)
 
@@ -131,7 +144,20 @@ def openGame():
     global browser
     global score
     global episode
-    episode = 0
+
+    print('Loading Model...')
+        # 모델을 불러온다
+    path = "./drqn"  # 모델을 저장할 위치
+    ckpt = tf.train.get_checkpoint_state(path)
+    if(ckpt != None):
+        oldCount = ckpt.model_checkpoint_path.split('-', 1)[1]
+        oldCount = oldCount.split('.', 1)[0]
+        episode = int(oldCount) + 1
+    else:
+        episode = 0
+        with open('./log/score_log.csv', 'w') as myfile:
+            wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
+    print("current episode :" + str(episode))
     score = 0
     browser = webdriver.Chrome('./chromedriver')
 
