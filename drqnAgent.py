@@ -9,13 +9,12 @@ import itertools
 import tensorflow.contrib.slim as slim
 
 
-
+import time
 import env
 import random
 from threading import Timer
 # helper 에는 타겟 신경망 그라디언트 업데이트 등이 들어있다.
 from helper import *
-
 env.openGame()
 
 
@@ -40,22 +39,24 @@ class Qnetwork():
             kernel_size=[8, 8], stride=[4, 4], padding='VALID', \
             biases_initializer=None, scope=myScope + '_conv1')
 
-        # 두번째 콘볼루션은 4x4 커널을 2 스트라이드로 64개의 activation map을 만든다.
+        # 두번째 콘볼루션은 5x5 커널을 2 스트라이드로 64개의 activation map을 만든다.
+        # (15-5)/2 +1 = 8
         # 출력 크기는 6x6x64
         self.conv2 = slim.convolution2d( \
             inputs=self.conv1, num_outputs=64, \
-            kernel_size=[4, 4], stride=[2, 2], padding='VALID', \
+            kernel_size=[5, 5], stride=[2, 2], padding='VALID', \
             biases_initializer=None, scope=myScope + '_conv2')
 
         # 세번째 콘볼루션은 3x3 커널을 1 스트라이드로 64개의 activation map을 만든다.
-        # 출력 크기는 4x4x64
+        # (6-3)/1 + 1 = 6
+        # 출력 크기는 6x6x64
         self.conv3 = slim.convolution2d( \
             inputs=self.conv2, num_outputs=64, \
             kernel_size=[3, 3], stride=[1, 1], padding='VALID', \
             biases_initializer=None, scope=myScope + '_conv3')
 
-        # 네번째 콘볼루션은 7x7 커널을 1 스트라이드 512개의 activation map을 만든다.
-        # 출력 크기는 1x1x512
+        # 네번째 콘볼루션은 4x4 커널을 1 스트라이드 512개의 activation map을 만든다.
+        # 출력 크기는 4x4x512
         self.conv4 = slim.convolution2d( \
             inputs=self.conv3, num_outputs=512, \
             kernel_size=[4, 4], stride=[1, 1], padding='VALID', \
@@ -125,7 +126,7 @@ class Qnetwork():
 
 
 class experience_buffer():
-    def __init__(self, buffer_size=1000):
+    def __init__(self, buffer_size=100):
         self.buffer = []
         self.buffer_size = buffer_size
 
@@ -151,17 +152,17 @@ trace_length = 8 # 학습할 때 각 경험 기록을 얼마나 길게 사용할
 update_freq = 5 # 학습 단계를 얼마나 자주 수행할지
 y = .99 # 타겟 Q value 에 대한 할인 인자
 startE = 1 # 무작위 행위의 시작 확률
-endE = 0.1 # 무작위 행위의 최종 확률
-anneling_steps = 10000 # startE부터 endE까지 몇단계에 걸쳐서 줄일 것인가.
-num_episodes = 10000 # 몇개의 에피소드를 할 것인가.
-pre_train_steps = 10000 # 학습 시작 전에 몇번의 무작위 행위를 할 것인가.
-load_model = False # 저장된 모델을 불러올 것인가?
+endE = 0.01 # 무작위 행위의 최종 확률
+anneling_steps = 1000000 # startE부터 endE까지 몇단계에 걸쳐서 줄일 것인가.
+num_episodes = 4000 # 몇개의 에피소드를 할 것인가.
+pre_train_episode = 20 # 학습 시작 전에 몇번의 무작위 episode를 할 것인가.
+load_model = True # 저장된 모델을 불러올 것인가?
 path = "./drqn" # 모델을 저장할 위치
 h_size = 512 # 이득 함수와 가치 함수로 나뉘기 전에 최종 콘볼루션의 크기
-max_epLength = 50 # 에피소드의 최대 길이 (50 걸음)
 time_per_step = 1 # git 생성에 사용될 각 걸음의 크기
 summaryLength = 10 # 분석을 위해 주기적으로 저장하기 위한 에피소드의 수
 tau = 0.001
+process_time_limit = 0.37
 
 # 그래프를 초기화한다
 tf.reset_default_graph()
@@ -208,10 +209,10 @@ if not os.path.exists(path):
 
 # 컨트롤 센터를 위한 로그파일을 만드는 것인데, 나는 컨트롤 센터가 없으니 안 만든다.
 ##Write the first line of the master log-file for the Control Center
-with open('./log/total_log.csv', 'w') as myfile:
-    wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
-    wr.writerow(['Episode','Length','Reward'])
-
+#with open('./log/total_log.csv', 'w') as myfile:
+#    wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
+#    wr.writerow(['Episode','Length','Reward'])
+count = 0
 # 텐서플로 세션을 연다
 with tf.Session(config=config) as sess:
     # 모델을 불러올지 체크
@@ -219,10 +220,21 @@ with tf.Session(config=config) as sess:
         print('Loading Model...')
         # 모델을 불러온다
         ckpt = tf.train.get_checkpoint_state(path)
-        saver.restore(sess, ckpt.model_checkpoint_path)
+        if (ckpt != None):
+            saver.restore(sess, ckpt.model_checkpoint_path)
+            oldCount = ckpt.model_checkpoint_path.split('-', 1)[1]
+            oldCount = oldCount.split('.', 1)[0]
+            count = int(oldCount) + 1
+        else:
+            with open('./log/total_log.csv', 'w') as myfile:
+                wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
+        print("current model  :" + str(count))
+
     # 변수를 초기화한다.
     sess.run(init)
-
+    e = startE - count*stepDrop * 500
+    if(e <= endE):
+        e = endE
     # 주요 신경망과 동일하게 타겟 신경망을 설정한다
     updateTarget(targetOps, sess)
 
@@ -232,7 +244,7 @@ with tf.Session(config=config) as sess:
                                          sess.graph)
 
     # 에피소드 시작
-    for i in range(num_episodes):
+    for i in range(num_episodes-count):
         # 에피소드별 경험 버퍼를 초기화한다
         episodeBuffer = []
         # 환경과 처음 상태을 초기화한다
@@ -247,15 +259,21 @@ with tf.Session(config=config) as sess:
         j = 0
         # 순환 레이어의 은닉 상태를 초기화한다.
         state = (np.zeros([1, h_size]), np.zeros([1, h_size]))
+
         # Q-Network
         # 만약 50 걸음보다 더 간다면 종료한다.
         # The Q-Network
         while d == 0:
             j += 1
             # Q-network 로부터 행동을 greedy 하게 선택하거나 e의 확률로 무작위 행동을 한다
-            if np.random.rand(1) < e or total_steps < pre_train_steps:
+            # processing start
+
+            start_time = time.time()
+
+
+            if np.random.rand(1) < e or i < pre_train_episode:
                 state1 = sess.run(mainQN.rnn_state, \
-                                  feed_dict={mainQN.scalarInput: [s], mainQN.trainLength: 1,
+                                  feed_dict={mainQN.scalarInput: [s/6.0], mainQN.trainLength:1,
                                              mainQN.state_in: state, mainQN.batch_size: 1})
                 a = np.random.randint(0, 3)
             else:
@@ -273,8 +291,10 @@ with tf.Session(config=config) as sess:
             # 버퍼에 현재 상태, 행동, 보상, 다음 상태, 종료 여부를 저장한다
             episodeBuffer.append(np.reshape(np.array([s, a, r, s1, d]), [1, 5]))
 
-            # 무작위 행동의 수를 넘으면 시작
-            if total_steps > pre_train_steps:
+            # 무작위 episode number를 넘으면 시작
+            if i >= pre_train_episode:
+                if(i == pre_train_episode):
+                    print("learning start!")
                 # 무작위 확률 값을 줄인다
                 if e > endE:
                     e -= stepDrop
@@ -314,6 +334,16 @@ with tf.Session(config=config) as sess:
                                         mainQN.targetQ: targetQ, \
                                         mainQN.actions: trainBatch[:, 1], mainQN.trainLength: trace_length, \
                                         mainQN.state_in: state_train, mainQN.batch_size: batch_size})
+
+            # processing end
+            end_time = time.time()
+            if(end_time - start_time < process_time_limit & i >= pre_train_episode):
+                sleep_time = process_time_limit - (end_time - start_time)
+                time.sleep(process_time_limit)
+            # processing end
+            end_time = time.time()
+            if(total_steps % 100 == 0):
+                print("process time :" +str(end_time -start_time))
             # 총 보상
             rAll += r
             # 상태를 바꾼다
@@ -333,13 +363,13 @@ with tf.Session(config=config) as sess:
         rList.append(rAll)
 
         # 주기적으로 모델을 저장한다
-        if i % 10 == 0 and i != 0:
-            saver.save(sess, path + '/model-' + str(i) + '.cptk')
+        if count % 10 == 0 and count != 0:
+            saver.save(sess, path + '/model-' + str(count) + '.cptk')
             print("Saved Model")
-        if len(rList) % summaryLength == 0 and len(rList) != 0:
+        if len(rList) % 10 == 0 and len(rList) != 0:
             print(total_steps, np.mean(rList[-summaryLength:]), e)
-            saveToCenter(i,rList,jList,np.reshape(np.array(episodeBuffer),[len(episodeBuffer),5]),\
+            saveToCenter(count+1,rList,jList,np.reshape(np.array(episodeBuffer),[len(episodeBuffer),5]),\
                            summaryLength,h_size,sess,mainQN,time_per_step)
+        count = count + 1
     saver.save(sess, path + '/model-' + str(i) + '.cptk')
-
 

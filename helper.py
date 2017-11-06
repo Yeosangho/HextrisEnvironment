@@ -54,4 +54,3 @@ def saveToCenter(i, rList, jList, bufferArray, summaryLength, h_size, sess, main
         wr.writerows(zip(bufferArray[:, 1], bufferArray[:, 2], a[:, 0], a[:, 1], a[:, 2], v[:, 0]))
 
 
-

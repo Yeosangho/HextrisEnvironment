@@ -3,7 +3,7 @@ from selenium.webdriver.common.keys import Keys
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import cv2
-
+import tensorflow as tf
 import numpy as np
 import PIL as Image
 import csv
@@ -20,6 +20,14 @@ color['black'] = [0, 0, 0]
 
 gridWidth = 64
 gridHeight = 64
+def distance(c1, c2):
+    (r1,g1,b1) = c1
+    (r2,g2,b2) = c2
+    return ((r1 - r2)**2 + (g1 - g2) ** 2 + (b1 - b2) **2)
+
+
+
+
 
 def checkColor(r, g, b):
     intR = int(r * 255)
@@ -33,22 +41,24 @@ def checkColor(r, g, b):
     #blue : 52,152,219 -> 3
     #green : 46,204,113 -> 4
     #black : 0 0 0  -> 5
-    if(intRGB == color['white']):
+    colors = list(color.values())
+    closest_colors = min(colors, key=lambda color: distance(color, intRGB))
+    closestColor = closest_colors
+    if(closestColor == color['white']):
         return 6
-    elif(intRGB == color['grey']):
+    elif(closestColor == color['grey']):
         return 0
-    elif(intRGB == color['red']):
+    elif(closestColor == color['red']):
         return 1
-    elif(intRGB == color['orange']):
+    elif(closestColor == color['orange']):
         return 2
-    elif(intRGB == color['blue']):
+    elif(closestColor == color['blue']):
         return 3
-    elif(intRGB == color['green']):
+    elif(closestColor == color['green']):
         return 4
-    elif(intRGB == color['black']):
+    elif(closestColor == color['black']):
         return 5
-    else:
-        return 0
+
 
 def printGrid(grid):
     for row in range(gridHeight):
@@ -88,7 +98,7 @@ def getImage():
     plotImg = mpimg.imread(img)
     #print(type(plotImg))
     plotImg = plotImg.astype(np.float32)
-    resized = cv2.resize(plotImg, (gridWidth, gridHeight))
+    resized = cv2.resize(plotImg, (gridWidth, gridHeight), interpolation = cv2.INTER_AREA )
     state = makeGrid(resized)
     return state
 
@@ -126,6 +136,19 @@ def openGame():
     global browser
     global score
     global episode
+    print('Loading Model...')
+        # 모델을 불러온다
+    path = "./drqn"  # 모델을 저장할 위치
+    ckpt = tf.train.get_checkpoint_state(path)
+    if(ckpt != None):
+        oldCount = ckpt.model_checkpoint_path.split('-', 1)[1]
+        oldCount = oldCount.split('.', 1)[0]
+        episode = int(oldCount) + 1
+    else:
+        episode = 0
+        with open('./log/score_log.csv', 'w') as myfile:
+            wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
+    print("current episode :" + str(episode))
     score = 0
     episode = 0
     browser = webdriver.Chrome('./chromedriver')
@@ -169,6 +192,7 @@ def step(action):
             scoreWriter = csv.writer(csvfile, delimiter=',',
                                     quotechar='|', quoting=csv.QUOTE_MINIMAL)
             scoreWriter.writerow([int(episode)] + [str(score)])
+        print("Episode :" + str(episode) + "Score : " + str(score))
     score = newScore
     return gameCapture, reward, done
 #def startGame():
