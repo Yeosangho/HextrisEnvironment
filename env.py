@@ -19,8 +19,8 @@ color['orange'] = [241,196,15]
 color['blue'] = [52,152,219]
 color['green'] = [46,204,113]
 color['black'] = [0, 0, 0]
-gridWidth = 64
-gridHeight = 64
+gridWidth = 48
+gridHeight = 48
 
 def distance(c1, c2):
     (r1,g1,b1) = c1
