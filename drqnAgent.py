@@ -24,35 +24,35 @@ class Qnetwork():
         # 신경망은 게임으로부터 벡터화된 배열로 프레임을 받아서,
         # 이것을 리사이즈 하고, 4개의 콘볼루션을 통해 처리한다.
 
-        # 입력값을 받는 부분 4096 차원은 64*64*1 의 차원이다.
-        self.scalarInput = tf.placeholder(shape=[None, 4096], dtype=tf.float32)
-        # conv2d 처리를 위해 64*64*1 으로 다시 리사이즈
-        self.imageIn = tf.reshape(self.scalarInput, shape=[-1, 64, 64, 1])
+        # 입력값을 받는 부분 2304 차원은 48*48*1 의 차원이다.
+        self.scalarInput = tf.placeholder(shape=[None, 2304], dtype=tf.float32)
+        # conv2d 처리를 위해 48*48*1 으로 다시 리사이즈
+        self.imageIn = tf.reshape(self.scalarInput, shape=[-1, 48, 48, 1])
 
         # 첫번째 콘볼루션은 8x8 커널을 4 스트라이드로 32개의 activation map을 만든다
         # 출력 크기는 (image 크기 - 필터 크기) / 스트라이드 + 1 이다.
         # zero padding이 없는 VALID 옵션이기 때문에
-        # (64-7)/3 + 1
-        # 20x20x32 의 activation volumn이 나온다
+        # (48-6)/2 + 1
+        # 22x22x32 의 activation volumn이 나온다
         self.conv1 = slim.convolution2d( \
             inputs=self.imageIn, num_outputs=32, \
-            kernel_size=[7, 7], stride=[3, 3], padding='VALID', \
+            kernel_size=[6, 6], stride=[2, 2], padding='VALID', \
             biases_initializer=None, scope=myScope + '_conv1')
 
         # 두번째 콘볼루션은 5x5 커널을 2 스트라이드로 64개의 activation map을 만든다.
-        # (20-4)/2 +1 = 9
-        # 출력 크기는 9x9x64
+        # (22-4)/2 +1 = 10
+        # 출력 크기는 10x10x64
         self.conv2 = slim.convolution2d( \
             inputs=self.conv1, num_outputs=64, \
             kernel_size=[4, 4], stride=[2, 2], padding='VALID', \
             biases_initializer=None, scope=myScope + '_conv2')
 
         # 세번째 콘볼루션은 3x3 커널을 1 스트라이드로 64개의 activation map을 만든다.
-        # (9-3)/1 + 1 = 7
+        # (10-4)/1 + 1 = 7
         # 출력 크기는 7x7x64
         self.conv3 = slim.convolution2d( \
             inputs=self.conv2, num_outputs=64, \
-            kernel_size=[3, 3], stride=[1, 1], padding='VALID', \
+            kernel_size=[4, 4], stride=[1, 1], padding='VALID', \
             biases_initializer=None, scope=myScope + '_conv3')
 
         # 네번째 콘볼루션은 7x7 커널을 1 스트라이드 512개의 activation map을 만든다.
@@ -162,7 +162,7 @@ h_size = 512 # 이득 함수와 가치 함수로 나뉘기 전에 최종 콘볼�
 time_per_step = 1 # git 생성에 사용될 각 걸음의 크기
 summaryLength = 10 # 분석을 위해 주기적으로 저장하기 위한 에피소드의 수
 tau = 0.001
-process_time_limit = 0.33
+process_time_limit = 0.15
 
 # 그래프를 초기화한다
 tf.reset_default_graph()
@@ -337,7 +337,7 @@ with tf.Session(config=config) as sess:
 
             # processing end
             end_time = time.time()
-            if(end_time - start_time < process_time_limit and i >= pre_train_episode):
+            if(end_time - start_time < process_time_limit):
                 sleep_time = process_time_limit - (end_time - start_time)
                 time.sleep(sleep_time)
             # processing end
