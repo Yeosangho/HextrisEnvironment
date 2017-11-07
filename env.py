@@ -166,7 +166,7 @@ def openGame():
 def startGame():
     global score
     global gameStep
-    global combotime
+    global comboBonus
     global nothingtime
     global oldIsCombo
     global episode
@@ -175,7 +175,7 @@ def startGame():
     oldIsCombo = 0
     gameStep = 0
     score = 0
-    combotime = 0
+    comboBonus = 0
     currentCombo = 0
     episode = episode+1
     browser.find_element_by_tag_name('body').send_keys(Keys.ENTER)
@@ -191,7 +191,7 @@ def render():
 def step(action):
     global score
     global gameStep
-    global combotime
+    global comboBonus
     global nothingtime
     global oldIsCombo
     global episode
@@ -199,16 +199,15 @@ def step(action):
     newScore = getScore()
     gettingScore = float(newScore) - float(score)
     isCombo = getComboTime()
-
     if (gettingScore == 0):
         nothingtime = nothingtime + 0.0001
     if (gettingScore > 0):
         nothingtime = 0
-    if (isCombo >  oldIsCombo):
+    if (isCombo == 1 and gettingScore > 0):
         currentCombo = currentCombo + 1
-        combotime = 0.05 * currentCombo
-    if (isCombo ==0 or isCombo == oldIsCombo):
-        combotime = 0
+        comboBonus= 0.05 * currentCombo
+    if (isCombo ==0 or gettingScore == 0):
+        comboBonus = 0
         if(isCombo == 0):
             currentCombo = 0
 
@@ -225,13 +224,15 @@ def step(action):
     gettingreward = gettingScore/200
     gameScore = float(newScore)/20000
     if(gameState == 1):
-        if (isCombo > oldIsCombo):
-            reward = gameStep + gameScore + gettingreward + combotime - nothingtime
-        if (isCombo == 0 or isCombo == oldIsCombo):
+        if (isCombo == 1 and gettingreward > 0):
+            reward = gameStep + gameScore + gettingreward + comboBonus - nothingtime
+        elif(isCombo == 1 and gettingreward == 0):
+            reward = gameStep - nothingtime
+        elif (isCombo == 0):
             if(oldIsCombo == 1):
                 reward =  -0.3 - nothingtime
             else:
-                reward = - nothingtime
+                reward = -nothingtime
         gameStep = gameStep + 0.00001
 
     elif(gameState == 2):

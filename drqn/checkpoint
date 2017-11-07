@@ -1,6 +1,0 @@
-model_checkpoint_path: "model-400.cptk"
-all_model_checkpoint_paths: "model-360.cptk"
-all_model_checkpoint_paths: "model-370.cptk"
-all_model_checkpoint_paths: "model-380.cptk"
-all_model_checkpoint_paths: "model-390.cptk"
-all_model_checkpoint_paths: "model-400.cptk"
