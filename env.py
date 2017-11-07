@@ -225,9 +225,9 @@ def step(action):
     gameScore = float(newScore)/20000
     if(gameState == 1):
         if (isCombo == 1 and gettingreward > 0):
-            reward = gameStep + gameScore + gettingreward + comboBonus - nothingtime
+            reward = gameStep + gameScore + gettingreward + comboBonus
         elif(isCombo == 1 and gettingreward == 0):
-            reward = gameStep - nothingtime
+            reward = gameStep + 0.001 * currentCombo
         elif (isCombo == 0):
             if(oldIsCombo == 1):
                 reward =  -0.3 - nothingtime
