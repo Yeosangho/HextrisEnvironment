@@ -339,7 +339,7 @@ with tf.Session(config=config) as sess:
             end_time = time.time()
             if(end_time - start_time < process_time_limit):
                 sleep_time = process_time_limit - (end_time - start_time)
-                time.sleep(sleep_time)
+                #time.sleep(sleep_time)
             # processing end
             end_time = time.time()
             if(total_steps % 100 == 0):

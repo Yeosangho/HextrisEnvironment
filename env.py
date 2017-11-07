@@ -170,11 +170,13 @@ def startGame():
     global nothingtime
     global oldIsCombo
     global episode
+    global currentCombo
     nothingtime = 0
     oldIsCombo = 0
     gameStep = 0
     score = 0
     combotime = 0
+    currentCombo = 0
     episode = episode+1
     browser.find_element_by_tag_name('body').send_keys(Keys.ENTER)
     return getImage()
@@ -193,17 +195,23 @@ def step(action):
     global nothingtime
     global oldIsCombo
     global episode
+    global currentCombo
     newScore = getScore()
     gettingScore = float(newScore) - float(score)
-    isCombo = getComboTime();
+    isCombo = getComboTime()
+
     if (gettingScore == 0):
         nothingtime = nothingtime + 0.0002
     if (gettingScore > 0):
         nothingtime = 0
-    if (isCombo ==1):
-        combotime = combotime + 0.00002
-    if (isCombo ==0):
+    if (isCombo >  oldIsCombo):
+        currentCombo = currentCombo + 1
+        combotime = 0.01 * currentCombo
+    if (isCombo ==0 or isCombo == oldIsCombo):
         combotime = 0
+        if(isCombo == 0):
+            currentCombo = 0
+
 
     if(action == 1):
         browser.find_element_by_tag_name('body').send_keys(Keys.ARROW_LEFT)
@@ -221,13 +229,13 @@ def step(action):
             reward = gameStep + gameScore + gettingreward + combotime - nothingtime
         if (isCombo == 0):
             if(oldIsCombo == 1):
-                reward =  -0.02 - nothingtime
+                reward =  -0.2 - nothingtime
             else:
                 reward = - nothingtime
         gameStep = gameStep + 0.00001
 
     elif(gameState == 2):
-        reward = -3
+        reward = -1
         done = 1
         gameStep = 0
         with open('./log/score_log.csv', 'a', newline='') as csvfile:
