@@ -233,7 +233,7 @@ def step(action):
                 reward =  -0.3 - nothingtime
             else:
                 reward = -nothingtime
-        gameStep = gameStep + 0.00001
+        gameStep = gameStep + 0.000001
 
     elif(gameState == 2):
         reward = -1
