@@ -201,7 +201,7 @@ def step(action):
     isCombo = getComboTime()
 
     if (gettingScore == 0):
-        nothingtime = nothingtime + 0.0002
+        nothingtime = nothingtime + 0.0001
     if (gettingScore > 0):
         nothingtime = 0
     if (isCombo >  oldIsCombo):
