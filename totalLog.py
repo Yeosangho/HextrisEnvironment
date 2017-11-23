@@ -6,9 +6,14 @@ y = []
 
 with open('./log/total_log.csv','r') as csvfile:
     plots = csv.reader(csvfile, delimiter=',')
+    sumScore = 0
     for row in plots:
-        x.append(float(row[0]))
-        y.append(float(row[2]))
+        sumScore = sumScore + float(row[1])
+        if(int(row[0])%1== 0):
+            x.append(row[0])
+            y.append(float(sumScore))
+            sumScore = 0
+
 
 plt.plot(x,y, label='reward')
 plt.xlabel('game episode')

@@ -151,10 +151,10 @@ batch_size = 4 # 각 학습 단계에서 경험 기록을 몇개나 사용할지
 trace_length = 8 # 학습할 때 각 경험 기록을 얼마나 길게 사용할지
 update_freq = 5 # 학습 단계를 얼마나 자주 수행할지
 y = .99 # 타겟 Q value 에 대한 할인 인자
-startE = 1 # 무작위 행위의 시작 확률
+startE = 0.01 # 무작위 행위의 시작 확률
 endE = 0.01 # 무작위 행위의 최종 확률
 anneling_steps = 1000000 # startE부터 endE까지 몇단계에 걸쳐서 줄일 것인가.
-num_episodes = 4000 # 몇개의 에피소드를 할 것인가.
+num_episodes = 6000 # 몇개의 에피소드를 할 것인가.
 pre_train_episode = 12 # 학습 시작 전에 몇번의 무작위 episode를 할 것인가.
 load_model = True # 저장된 모델을 불러올 것인가?
 path = "./drqn" # 모델을 저장할 위치
@@ -212,7 +212,7 @@ if not os.path.exists(path):
 #with open('./log/total_log.csv', 'w') as myfile:
 #    wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
 #    wr.writerow(['Episode','Length','Reward'])
-count = 0
+count = 1
 # 텐서플로 세션을 연다
 with tf.Session(config=config) as sess:
     # 모델을 불러올지 체크
@@ -363,12 +363,12 @@ with tf.Session(config=config) as sess:
         rList.append(rAll)
 
         # 주기적으로 모델을 저장한다
-        if count % 10 == 0 and count != 0:
+        if count % 10 == 0 and count != 0 :
             saver.save(sess, path + '/model-' + str(count) + '.cptk')
             print("Saved Model")
         if len(rList) % 10 == 0 and len(rList) != 0:
             print(total_steps, np.mean(rList[-summaryLength:]), e)
-            saveToCenter(count+1,rList,jList,np.reshape(np.array(episodeBuffer),[len(episodeBuffer),5]),\
+            saveToCenter(count,rList,jList,np.reshape(np.array(episodeBuffer),[len(episodeBuffer),5]),\
                            summaryLength,h_size,sess,mainQN,time_per_step)
         count = count + 1
     saver.save(sess, path + '/model-' + str(i) + '.cptk')

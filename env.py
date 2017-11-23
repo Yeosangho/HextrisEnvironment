@@ -152,7 +152,7 @@ def openGame():
     if(ckpt != None):
         oldCount = ckpt.model_checkpoint_path.split('-', 1)[1]
         oldCount = oldCount.split('.', 1)[0]
-        episode = int(oldCount) + 1
+        episode = int(oldCount)
     else:
         episode = 0
         with open('./log/score_log.csv', 'w') as myfile:
@@ -175,9 +175,9 @@ def startGame():
     oldIsCombo = 0
     gameStep = 0
     score = 0
+    episode = episode + 1
     comboBonus = 0
     currentCombo = 0
-    episode = episode+1
     browser.find_element_by_tag_name('body').send_keys(Keys.ENTER)
     return getImage()
 
